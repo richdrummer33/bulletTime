@@ -22,7 +22,7 @@ class CfgMods
 	};
 };
 
-class Extended_PostInit_EventHandlers
+/*class Extended_PostInit_EventHandlers
 {
-	bulletTime_Post_Init = "paintballRampMod_Post_Init_Var = [] execVM ""\bulletTime\init.sqf"" ";
+	bulletTime_Post_Init = "paintballRampMod_Post_Init_Var = [] execVM ""init.sqf"" ";
 };

@@ -1,10 +1,13 @@
+// Private varialbes - DO NOT CHANGE
 missionNamespace setvariable ["bTimeAvail", true]; // bullettime ready indicator
-missionNamespace setvariable ["bTimeActive",false]; // indicates when bulllettime is on
-missionNamespace setvariable ["reactionCooldown",false];
-missionNamespace setvariable ["btPassedDammage", 0];
-missionNamespace setvariable ["autoReact", true];
-missionNamespace setvariable ["tracerVision", true];
-missionNamespace setvariable ["godMode", true];
+missionNamespace setvariable ["bTimeActive", false]; // indicates when bulllettime is on
+missionNamespace setvariable ["reactionCooldown", false];
+missionNamespace setvariable ["btPassedDammage", 0]; // Saves the amount of damage that the player had before entering bullet time mode. Value is applied back to player when godmode is enabled (no damage sustained in god mode while in BT mode)
+
+// Public variables - CHANGE TO YOUR LIKING
+missionNamespace setvariable ["autoReact", true]; // Automatically react to enemy fire and enter bullet time. Has baked-in cooldown.
+missionNamespace setvariable ["tracerVision", true]; // Switch all weapon ammo to tracers while in bullet time mode
+missionNamespace setvariable ["godMode", true]; // Player is invincible while in bullet time mode
 
 ammoList = [];
 
@@ -27,10 +30,10 @@ nul = [] execVM "bulletTime\setGodMode.sqf";
 	
 	};
 }] call CBA_fnc_addDisplayHandler;
-
 { 
 	if (side _x != playerSide) then
 	{
+		hint "Enemy Slowmo Bullets Applied";
 		nul = [_x, "FiredMan", 
 		{		
 			_actor = _this select 0;
@@ -44,17 +47,23 @@ nul = [] execVM "bulletTime\setGodMode.sqf";
 			_wdirp = player weaponDirection _wpnp;
 			_dst = _pos0 distance _pos1;
 			
+			// Calculate the deviation of the bullet from the player
 			_pos2 = [(_pos0 select 0) + _dst * (_wdir select 0), (_pos0 select 1) + _dst * (_wdir select 1), (_pos0 select 2) + _dst * (_wdir select 2)];
-			_deviation = _pos2 distance _pos1;
+			_deviation = _pos2 distance _pos1; // Distance between the bullet and the player
 			
-			
-			_pos3 = [(_pos1 select 0) + _dst * (_wdirp select 0), (_pos1 select 1) + _dst * (_wdirp select 1), (_pos1 select 2) + _dst * (_wdirp select 2)];
-			_deviationPlayer = _pos3 distance _pos0;
-	
-			if (_deviation < 5) then
+			// Is the player facing the enemy when shot at? I.e. "caught by surprise"?
+			_pos3 = [(_pos1 select 0) + _dst * (_wdirp select 0), (_pos1 select 1) + _dst * (_wdirp select 1), (_pos1 select 2) + _dst * (_wdirp select 2)]; 
+			_deviationPlayer = _pos3 distance _pos0; // True / false?
+
+			// hint the deviation
+			// hint format ["Deviation: %1", _deviation];
+
+			if (_deviation < 10) then // bullet is 10 meters from player
 			{
-				if ((_deviationPlayer > 10) && !(missionNamespace getVariable "reactionCooldown" ) && (missionNamespace getVariable "autoReact")) then 
+				// if ((_deviationPlayer > 10) && 
+				if (missionNamespace getVariable "reactionCooldown" == false && missionNamespace getVariable "autoReact") then 
 				{ 
+					hint "Reaction cooldown active";
 					nul = [] execVM "bulletTime\bulletTime.sqf"; 
 				};
 				
@@ -82,6 +91,7 @@ nul = [] execVM "bulletTime\setGodMode.sqf";
 	
 	if ((side _x == playerSide) && !(isPlayer _x)) then
 	{
+		hint "Detected enemy fire";
 		nul = [_x, "FiredMan", 
 		{	
 			_actor = _this select 0;
@@ -104,6 +114,9 @@ nul = [] execVM "bulletTime\setGodMode.sqf";
 				
 				_distAve = _distTot/_cnt;
 			};
+
+			// hint the _distAve
+			//hint format ["_distAve: %1", _distAve];
 		 	
 			if ((missionNamespace getVariable "bTimeActive") && !(isPlayer _actor)) then
 			{
@@ -116,6 +129,7 @@ nul = [] execVM "bulletTime\setGodMode.sqf";
 
 fnc_replaceWithTracer = {
 
+	hint "Replace all units with tracers";
 	_weapons = weapons _this;
 	
 	{
@@ -127,20 +141,26 @@ fnc_replaceWithTracer = {
 			case east: {_tracerColor = "green"};
 			case independent: {_tracerColor = "green"};
 			case civilian: {_tracerColor = "yellow"};
-			case west: {_tracerColor = "red"};
-		};
-		// Find correct tracer mag name
-		_correctMag = _compMags select {toLower _x find "tracer" > 0};
-		if (count _correctMag == 0) exitWith {/*No tracer mags for this weapon*/};
-		_correctMag = _compMags select {toLower _x find _tracerColor > 0};
-		if (count _correctMag > 0) then {
-			_correctMag = _correctMag select 0;
-		} else {
-			_correctMag = _compMags select {toLower _x find "tracer" > 0};
-			_correctMag = _correctMag select {toLower _x find "red" < 0 && toLower _x find "green" < 0 && toLower _x find "yellow" < 0};
-			_correctMag = _correctMag select 0;
+			case west: {_tracerColor = "yellow"};
 		};
 
+		// Try to set the default tracer mag name (empty string if no mag with that color exists)
+		_correctMag = _compMags select {toLower _x find _tracerColor > 0}; //_correctMag = _compMags select {toLower _x find "tracer" > 0};
+		
+		// loop through all possible tracer colors if the default did not work
+		if (count _correctMag == 0) then
+		{
+			_possibleTracerColors = ["orange", "pink", "yellow", "white", "purple", "green", "red", ""];
+			{
+				_correctMag = _compMags select {toLower _x find _x > 0};
+				if (count _correctMag > 0) then // BREAK OUT OF lookAtPos
+				{
+					_tracerColor = _x;
+					_correctMag = _correctMag select 0;
+				};
+			} forEach _possibleTracerColors;
+		};
+		
 		// Add magazines and remove non tracer ones
 		_currentMags = (magazines _this) select {_x in _compMags};
 		_nonTracerMags = _currentMags select {toLower _x find "tracer" < 0};
