@@ -4,7 +4,7 @@ missionNamespace setvariable ["reactionCooldown",false];
 missionNamespace setvariable ["btPassedDammage", 0];
 missionNamespace setvariable ["autoReact", true];
 missionNamespace setvariable ["tracerVision", true];
-missionNamespace setvariable ["godMode", false];
+missionNamespace setvariable ["godMode", true];
 
 ammoList = [];
 
@@ -22,7 +22,6 @@ nul = [] execVM "bulletTime\setGodMode.sqf";
 		//} 
 		//else 
 		//{
-			hint "bulletTime activated!";
 			nul = [] execVM "bulletTime\bulletTime.sqf"; 
 		//};
 	
@@ -127,6 +126,8 @@ fnc_replaceWithTracer = {
 		{
 			case east: {_tracerColor = "green"};
 			case independent: {_tracerColor = "green"};
+			case civilian: {_tracerColor = "yellow"};
+			case west: {_tracerColor = "red"};
 		};
 		// Find correct tracer mag name
 		_correctMag = _compMags select {toLower _x find "tracer" > 0};

@@ -31,6 +31,15 @@
     //          I set this to 2x to make you move at the same speed while in bullet-time (default is 0.5x -- half the normal time scale).
     //          There may be an upper limit, but I haven't tested it.
     missionNamespace setvariable ["btPlayerMovementSpeedMultiplier", 2.0];     
+    
+    // "btTransitionDuration" is the bullet-time transition duration.
+    //      E.g.
+    //          0.5 means that the transition will last for 0.5 seconds, 1.0 means that the transition will last for 1.0 seconds, etc.
+    //      Default setting:
+    //          1 seconds.
+    //      Note:
+    //          You can set this to any value equal to or greater than 0. Note that I have not tested 0 seconds or the upper limit.
+    missionNamespace setvariable ["btTransitionDuration", 1.0];
 
     // "btDuration" is the bullet-time duration. 
     //      E.g. 
@@ -40,7 +49,7 @@
     //      FYI: 
     //          I set this to 4.5 seconds. But you can set this number to any duration!
     //          It can be set to a **very high** number, with up to 38 zeros -- more time than the universe has existed (°o•).
-    missionNamespace setvariable ["btDuration", 4.5];   
+    missionNamespace setvariable ["btDuration", 10000];   
 
     // "chromAb" is the chromatic aberration effect.
     //      E.g.
@@ -60,13 +69,21 @@
     //      Note:
     //          You can set this to any value equal to or greater than 0. Note that I have not tested 0 seconds or the upper limit.
     missionNamespace setvariable ["btRecoveryTime", 4.5];
+
+    // Chromatic abberation screen-effect amount
+    //      E.g.
+    //          1 means that the screen-effect will be full-strength
+    //          0.0 means that the effect will be off.
+    //      Default setting:
+    //          0.0133 - i.e. 1.33%
+    //      Note:
+    //          You can set this to any value equal to or greater than 0. Note that I have not tested 0 or the upper limit.
+    missionNamespace setvariable ["btChromAbberationStrength", 0.005];
     
 // <<<<<<<<<<<<<<<< USER SETTINGS END <<<<<<<<<<<<<<<<
 
-hint "BULLET-TIME AVAIL?";
 if (missionNamespace getvariable ["bTimeAvail",true]) then 
 {    
-    hint "yes!";
     // These variables keep track of the bullet time states, and should not be edited... unless you know what you're doing! (̿▀̿‿ ̿▀̿ ̿)
     missionNamespace setvariable ["bTimeAvail", false]; 
     missionNamespace setvariable ["bTimeActive", true]; 
@@ -74,6 +91,8 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
     _btGameTimeScale = missionNamespace getvariable "btGameTimeScale";
     _btPlayerMovementSpeedMultiplier = missionNamespace getvariable "btPlayerMovementSpeedMultiplier";
     _btDuration = missionNamespace getvariable "btDuration";
+    _btTransitionDuration = missionNamespace getvariable "btTransitionDuration";
+    _btChromAbberationStrength = 0.001; // missionNamespace getvariable "btChromAbberationStrength";
 
     if (missionNamespace getvariable ["tracerVision", true]) then 
     { 
@@ -88,6 +107,30 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
             player setDammage 0; 
             missionNamespace setvariable ["btPassedDammage", damagePlyr];
 
+            chromAb =  ["RadialBlur", 100, [0, 0, 0, 0]] call compile preprocessFileLineNumbers "bulletTime\chromAb.sqf"; // ?????  (missionNamespace getvariable ["btChromAbberationStrength"]) ?????
+            //chromAb ppEffectCommit 100; // ?????  (missionNamespace getvariable ["btChromAbberationStrength"]) ?????
+  
+            // Smoothly transition the game time scale and player movement speed.
+            // In step size, use transition duration 
+            for "_i" from 0 to _btTransitionDuration step 0.1 do
+            {
+                // Set the game time scale by percent _i / _btTransitionDuration  -- (_i / _btTransitionDuration is the lerp percentage)
+                _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * _i / _btTransitionDuration; 
+                // hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
+                setAccTime _accelTimeStepwise; 
+
+                // Set player anim speed by percent _i / _btTransitionDuration.
+                player setAnimSpeedCoef 1 + (_btPlayerMovementSpeedMultiplier - 1) * _i / _btTransitionDuration;
+
+                // Strengthen the pp effect by percent _i / _btTransitionDuration
+                _lerpPercent = _i / _btTransitionDuration;
+                chromAb ppEffectAdjust [_lerpPercent * _btChromAbberationStrength, _lerpPercent * _btChromAbberationStrength, 1, 1];
+
+
+                sleep 0.2;
+            };
+
+        /*
             _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 0.25; // 0.25 is the lerp percentage
             hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
             setAccTime _accelTimeStepwise; // 1 + (_btGameTimeScale - 1) * 0.25; 
@@ -110,12 +153,16 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
             setAccTime _accelTimeStepwise; // 1 + (_btGameTimeScale - 1) * 1; 
 
             player setAnimSpeedCoef (2 * _btPlayerMovementSpeedMultiplier);
-        
+        */
+
         // ---- Bullet time is in play for btDuration! ---- //
 
-        // wait (aka "sleep") for the bullet time duration before returnig to normal time....
-        sleep _btDuration;
-            if (missionNamespace getVariable ["godMode",true]) exitWith 
+        sleep _btDuration; // wait (aka "sleep") for the bullet time duration before returnig to normal time....
+
+        // ---- Bullet time is over! ---- //
+
+
+            /*if (missionNamespace getVariable ["godMode",true]) exitWith 
             {
                 chromAb ppEffectAdjust [0.0133, 0.0133, true];
             }; 
@@ -123,11 +170,31 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
             sleep 0.33; 
             chromAb ppEffectAdjust [0.0067, 0.0067, true]; 
             sleep 0.33; 
-            chromAb ppEffectAdjust [0.0025, 0.0025, true];
+            chromAb ppEffectAdjust [0.0025, 0.0025, true];*/
+            
             if (missionNamespace getvariable ["bTimeActive",true]) then 
             { 
                 playSound3D ["bulletTime\sounds\powerup.wav", player, false, getPosASL player, 5, 1, 0]; 
             };
+
+            // Ramp down the player's speed and ramp up the game time-scale, and chormatic abberation, in for loop
+            for "_i" from 0 to _btTransitionDuration step 0.1 do
+            {
+                // Set the game time scale by percent _i / _btTransitionDuration  -- (_i / _btTransitionDuration is the lerp percentage)
+                _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * (1 - _i / _btTransitionDuration); 
+                // hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
+                setAccTime _accelTimeStepwise; 
+
+                // Set player anim speed by percent _i / _btTransitionDuration.
+                player setAnimSpeedCoef 1 + (_btPlayerMovementSpeedMultiplier - 1) * (1 - _i / _btTransitionDuration);
+
+                // Strengthen the pp effect by percent _i / _btTransitionDuration
+                chromAb ppEffectAdjust [(1 - _i / _btTransitionDuration) * _btChromAbberationStrength, (1 - _i / _btTransitionDuration) * _btChromAbberationStrength, 0.06, 0.06];
+
+                sleep 0.2;
+            };
+
+            /*
 
             // Ramp down the player's speed and ramp up the game time-scalem, stepwise...
             player setAnimSpeedCoef (1.67 * _btPlayerMovementSpeedMultiplier);
@@ -151,12 +218,13 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
             player setDammage damagePlyr;
             player setAnimSpeedCoef 1;
             setAccTime 1; 
+
+        */
             if ((missionNamespace getvariable ["bTimeActive",true]) && (missionNamespace getvariable ["bulletTime\tracerVision",true])) then 
             {  
                 nul = call compile preprocessFileLineNumbers  "bulletTime\resetAmmo.sqf";  
             };
             missionNamespace setvariable ["bTimeActive",false];
-            chromAb ppEffectAdjust [0.0025, 0.0025, true];
 
         sleep 0.33;
             chromAb ppEffectEnable false;
@@ -182,16 +250,12 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
 }
 else
 {
-    hint "no!";
-    hint "BULLET-TIME ACTIVE?";
-
     _btGameTimeScale = missionNamespace getvariable "btGameTimeScale";
     _btPlayerMovementSpeedMultiplier = missionNamespace getvariable "btPlayerMovementSpeedMultiplier";
     _btDuration = missionNamespace getvariable "btDuration";
 
     if (missionNamespace getvariable ["bTimeActive", true]) then 
     {
-        hint "BULLET-TIME ACTIVE!";
 		 sleep 0.1;
             if (missionNamespace getvariable ["tracerVision",true]) then 
             { 
