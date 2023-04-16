@@ -75,10 +75,10 @@
     //          1 means that the screen-effect will be full-strength
     //          0.0 means that the effect will be off.
     //      Default setting:
-    //          0.0133 - i.e. 1.33%
+    //          0.001 - subtle effect
     //      Note:
     //          You can set this to any value equal to or greater than 0. Note that I have not tested 0 or the upper limit.
-    missionNamespace setvariable ["btChromAbberationStrength", 0.005];
+    missionNamespace setvariable ["btChromAbberationStrength", 0.001];
     
 // <<<<<<<<<<<<<<<< USER SETTINGS END <<<<<<<<<<<<<<<<
 
@@ -92,7 +92,7 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
     _btPlayerMovementSpeedMultiplier = missionNamespace getvariable "btPlayerMovementSpeedMultiplier";
     _btDuration = missionNamespace getvariable "btDuration";
     _btTransitionDuration = missionNamespace getvariable "btTransitionDuration";
-    _btChromAbberationStrength = 0.001; // missionNamespace getvariable "btChromAbberationStrength";
+    _btChromAbberationStrength = missionNamespace getvariable "btChromAbberationStrength";
 
     if (missionNamespace getvariable ["tracerVision", true]) then 
     { 
@@ -107,8 +107,8 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
             player setDammage 0; 
             missionNamespace setvariable ["btPassedDammage", damagePlyr];
 
-            chromAb =  ["RadialBlur", 100, [0, 0, 0, 0]] call compile preprocessFileLineNumbers "bulletTime\chromAb.sqf"; // ?????  (missionNamespace getvariable ["btChromAbberationStrength"]) ?????
-            //chromAb ppEffectCommit 100; // ?????  (missionNamespace getvariable ["btChromAbberationStrength"]) ?????
+            chromAb =  ["ChromAberration", 1000, [0.03, 0.02, true]] call compile preprocessFileLineNumbers "bulletTime\chromAb.sqf";
+            chromAb ppEffectCommit 10;
   
             // Smoothly transition the game time scale and player movement speed.
             // In step size, use transition duration 
@@ -124,36 +124,16 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
 
                 // Strengthen the pp effect by percent _i / _btTransitionDuration
                 _lerpPercent = _i / _btTransitionDuration;
-                chromAb ppEffectAdjust [_lerpPercent * _btChromAbberationStrength, _lerpPercent * _btChromAbberationStrength, 1, 1];
+                chromAb ppEffectAdjust 
+                [
+                    _lerpPercent * _btChromAbberationStrength, 
+                    _lerpPercent * _btChromAbberationStrength, 
+                    true
+                ];
 
 
                 sleep 0.2;
             };
-
-        /*
-            _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 0.25; // 0.25 is the lerp percentage
-            hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
-            setAccTime _accelTimeStepwise; // 1 + (_btGameTimeScale - 1) * 0.25; 
-
-            player setAnimSpeedCoef (1.25 * _btPlayerMovementSpeedMultiplier);
-
-            chromAb =  ["ChromAberration", 1000, [0.03, 0.02, true]] call compile preprocessFileLineNumbers "bulletTime\chromAb.sqf"; // ?????  (missionNamespace getvariable ["btChromAbberationStrength"]) ?????
-            chromAb ppEffectCommit 10; // ?????  (missionNamespace getvariable ["btChromAbberationStrength"]) ?????
-
-        sleep 0.33;
-            _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 0.5; // 0.5 is the lerp percentage
-            hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
-            setAccTime _accelTimeStepwise; // 1 + (_btGameTimeScale - 1) * 0.67; 
-
-            player setAnimSpeedCoef (1.67 * _btPlayerMovementSpeedMultiplier);
-
-        sleep 0.33;
-            _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 1; // 1 is the lerp percentage - i.e. 100% 
-            hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
-            setAccTime _accelTimeStepwise; // 1 + (_btGameTimeScale - 1) * 1; 
-
-            player setAnimSpeedCoef (2 * _btPlayerMovementSpeedMultiplier);
-        */
 
         // ---- Bullet time is in play for btDuration! ---- //
 
@@ -189,37 +169,16 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
                 player setAnimSpeedCoef 1 + (_btPlayerMovementSpeedMultiplier - 1) * (1 - _i / _btTransitionDuration);
 
                 // Strengthen the pp effect by percent _i / _btTransitionDuration
-                chromAb ppEffectAdjust [(1 - _i / _btTransitionDuration) * _btChromAbberationStrength, (1 - _i / _btTransitionDuration) * _btChromAbberationStrength, 0.06, 0.06];
+                chromAb ppEffectAdjust 
+                [
+                    (1 - _i / _btTransitionDuration) * _btChromAbberationStrength, 
+                    (1 - _i / _btTransitionDuration) * _btChromAbberationStrength, 
+                    true
+                ];
 
                 sleep 0.2;
             };
 
-            /*
-
-            // Ramp down the player's speed and ramp up the game time-scalem, stepwise...
-            player setAnimSpeedCoef (1.67 * _btPlayerMovementSpeedMultiplier);
-
-            _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 0.6; 
-            hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
-            setAccTime _accelTimeStepwise;
-
-            chromAb ppEffectAdjust [0.0133, 0.0133, true];
-            
-        sleep 0.33;
-            player setAnimSpeedCoef (1.25 * _btPlayerMovementSpeedMultiplier);
-
-            _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 0.8; 
-            hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
-            setAccTime _accelTimeStepwise; // (1 + (_btGameTimeScale - 1) * 0.8); 
-
-            chromAb ppEffectAdjust [0.0067, 0.0067, true];
-
-        sleep 0.33;
-            player setDammage damagePlyr;
-            player setAnimSpeedCoef 1;
-            setAccTime 1; 
-
-        */
             if ((missionNamespace getvariable ["bTimeActive",true]) && (missionNamespace getvariable ["bulletTime\tracerVision",true])) then 
             {  
                 nul = call compile preprocessFileLineNumbers  "bulletTime\resetAmmo.sqf";  
