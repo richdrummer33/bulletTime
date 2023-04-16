@@ -5,11 +5,12 @@ missionNamespace setvariable ["btPassedDammage", 0];
 missionNamespace setvariable ["autoReact", true];
 missionNamespace setvariable ["tracerVision", true];
 missionNamespace setvariable ["godMode", false];
+
 ammoList = [];
 
-nul = [] execVM "\bulletTime\removeReaction.sqf";
-nul = [] execVM "\bulletTime\removeTracerVision.sqf";
-nul = [] execVM "\bulletTime\setGodMode.sqf";
+nul = [] execVM "bulletTime\removeReaction.sqf"; // RB 2023: Previously "\bulletTime\____.sqf", with the \ included at the beginning of the path. This caused the script to fail to execute.
+nul = [] execVM "bulletTime\removeTracerVision.sqf";
+nul = [] execVM "bulletTime\setGodMode.sqf";
 
 ["KeyDown", 
 {	
@@ -21,7 +22,8 @@ nul = [] execVM "\bulletTime\setGodMode.sqf";
 		//} 
 		//else 
 		//{
-			nul = [] execVM "\bulletTime\bulletTime.sqf"; 
+			hint "bulletTime activated!";
+			nul = [] execVM "bulletTime\bulletTime.sqf"; 
 		//};
 	
 	};
@@ -54,7 +56,7 @@ nul = [] execVM "\bulletTime\setGodMode.sqf";
 			{
 				if ((_deviationPlayer > 10) && !(missionNamespace getVariable "reactionCooldown" ) && (missionNamespace getVariable "autoReact")) then 
 				{ 
-					nul = [] execVM "\bulletTime\bulletTime.sqf"; 
+					nul = [] execVM "bulletTime\bulletTime.sqf"; 
 				};
 				
 				nul = [] spawn 
@@ -73,7 +75,7 @@ nul = [] execVM "\bulletTime\setGodMode.sqf";
 			// Slowmo bullet feature 
 			if (missionNamespace getVariable "bTimeActive") then
 			{
-				nul = [_bullet, _dst] execVM "\bulletTime\slowMoBullets.sqf";
+				nul = [_bullet, _dst] execVM "bulletTime\slowMoBullets.sqf";
 			};
 			
 		}] call CBA_fnc_addBISEventHandler;
@@ -106,7 +108,7 @@ nul = [] execVM "\bulletTime\setGodMode.sqf";
 		 	
 			if ((missionNamespace getVariable "bTimeActive") && !(isPlayer _actor)) then
 			{
-				nul = [_bullet, _distAve] execVM "\bulletTime\slowMoBullets.sqf";
+				nul = [_bullet, _distAve] execVM "bulletTime\slowMoBullets.sqf";
 			};
 		}] call CBA_fnc_addBISEventHandler;
 	};
