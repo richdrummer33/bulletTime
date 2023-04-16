@@ -8,7 +8,7 @@ missionNamespace setvariable ["godMode", false];
 
 ammoList = [];
 
-nul = [] execVM "bulletTime\removeReaction.sqf"; // (reverted back) ~~~ RB 2023: Previously "\bulletTime\____.sqf", with the \ included at the beginning of the path. This caused the script to fail to execute.~~~~
+nul = [] execVM "bulletTime\removeReaction.sqf"; // RB 2023: Previously "\bulletTime\____.sqf", with the \ included at the beginning of the path. This caused the script to fail to execute.
 nul = [] execVM "bulletTime\removeTracerVision.sqf";
 nul = [] execVM "bulletTime\setGodMode.sqf";
 
@@ -18,7 +18,7 @@ nul = [] execVM "bulletTime\setGodMode.sqf";
 		//if (missionNamespace getVariable "godMode") then
 		//{
 		//	_godModeBTvars = godModeBTvars;
-		//	godModeBTvars = _godModeBTvars execVM "bulletTimebulletTime_godMode.sqf"; 
+		//	godModeBTvars = _godModeBTvars execVM "\bulletTime\bulletTime_godMode.sqf"; 
 		//} 
 		//else 
 		//{

@@ -84,19 +84,31 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
             damagePlyr = getDammage player;
             playSound3D ["bulletTime\sounds\powerdown.wav", player, false, getPosASL player, 5, 1, 0]; 
             hint "BULLET-TIME!!!";
+
             player setDammage 0; 
             missionNamespace setvariable ["btPassedDammage", damagePlyr];
-            setAccTime 1 + ( - 1) * 0.25; // 0.1316 is the lerp percentage
+
+            _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 0.25; // 0.25 is the lerp percentage
+            hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
+            setAccTime _accelTimeStepwise; // 1 + (_btGameTimeScale - 1) * 0.25; 
+
             player setAnimSpeedCoef (1.25 * _btPlayerMovementSpeedMultiplier);
+
             chromAb =  ["ChromAberration", 1000, [0.03, 0.02, true]] call compile preprocessFileLineNumbers "bulletTime\chromAb.sqf"; // ?????  (missionNamespace getvariable ["btChromAbberationStrength"]) ?????
             chromAb ppEffectCommit 10; // ?????  (missionNamespace getvariable ["btChromAbberationStrength"]) ?????
 
         sleep 0.33;
-            setAccTime 1 + (_btGameTimeScale - 1) * 0.67; // 0.5697 is the lerp percentage
+            _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 0.5; // 0.5 is the lerp percentage
+            hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
+            setAccTime _accelTimeStepwise; // 1 + (_btGameTimeScale - 1) * 0.67; 
+
             player setAnimSpeedCoef (1.67 * _btPlayerMovementSpeedMultiplier);
 
         sleep 0.33;
-            setAccTime 1 + (_btGameTimeScale - 1) * 1; // 1 is the lerp percentage - i.e. 100%
+            _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 1; // 1 is the lerp percentage - i.e. 100% 
+            hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
+            setAccTime _accelTimeStepwise; // 1 + (_btGameTimeScale - 1) * 1; 
+
             player setAnimSpeedCoef (2 * _btPlayerMovementSpeedMultiplier);
         
         // ---- Bullet time is in play for btDuration! ---- //
@@ -107,6 +119,7 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
             {
                 chromAb ppEffectAdjust [0.0133, 0.0133, true];
             }; 
+            
             sleep 0.33; 
             chromAb ppEffectAdjust [0.0067, 0.0067, true]; 
             sleep 0.33; 
@@ -118,12 +131,20 @@ if (missionNamespace getvariable ["bTimeAvail",true]) then
 
             // Ramp down the player's speed and ramp up the game time-scalem, stepwise...
             player setAnimSpeedCoef (1.67 * _btPlayerMovementSpeedMultiplier);
-            setAccTime (1 + (_btGameTimeScale - 1) * 0.6); 
+
+            _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 0.6; 
+            hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
+            setAccTime _accelTimeStepwise;
+
             chromAb ppEffectAdjust [0.0133, 0.0133, true];
             
         sleep 0.33;
             player setAnimSpeedCoef (1.25 * _btPlayerMovementSpeedMultiplier);
-            setAccTime (1 + (_btGameTimeScale - 1) * 0.8); 
+
+            _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 0.8; 
+            hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
+            setAccTime _accelTimeStepwise; // (1 + (_btGameTimeScale - 1) * 0.8); 
+
             chromAb ppEffectAdjust [0.0067, 0.0067, true];
 
         sleep 0.33;
@@ -184,11 +205,17 @@ else
                 missionNamespace setvariable ["bTimeAvail",false]; 
             };
 		    player setAnimSpeedCoef (1.67 * _btPlayerMovementSpeedMultiplier);
-            setAccTime (1 + (_btGameTimeScale - 1) * 0.6); 
+
+            _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 0.6;
+            hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
+            setAccTime _accelTimeStepwise; // (1 + (_btGameTimeScale - 1) * 0.6); 
 
 		sleep 0.23;
             player setAnimSpeedCoef (1.25 * _btPlayerMovementSpeedMultiplier);
-            setAccTime (1 + (_btGameTimeScale - 1) * 0.8); 
+
+            _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * 0.8;
+            hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
+            setAccTime _accelTimeStepwise; // (1 + (_btGameTimeScale - 1) * 0.8); 
 
 		sleep 0.33;
 			player setDammage damagePlyr;
