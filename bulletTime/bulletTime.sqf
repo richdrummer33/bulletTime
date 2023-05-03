@@ -270,3 +270,45 @@ else
 		};
     };
 };
+
+BulletTimeEnd = {
+            if (missionNamespace getvariable ["bTimeActive",true]) then 
+            { 
+                playSound3D ["bulletTime\sounds\powerup.wav", player, false, getPosASL player, 5, 1, 0]; 
+            };
+
+            // Ramp down the player's speed and ramp up the game time-scale, and chormatic abberation, in for loop
+            for "_i" from 0 to _btTransitionDuration step 0.1 do
+            {
+                // Set the game time scale by percent _i / _btTransitionDuration  -- (_i / _btTransitionDuration is the lerp percentage)
+                _accelTimeStepwise = 1 + (_btGameTimeScale - 1) * (1 - _i / _btTransitionDuration); 
+                // hint format ["_accelTimeStepwise: %1", _accelTimeStepwise];
+                setAccTime _accelTimeStepwise; 
+
+                // Set player anim speed by percent _i / _btTransitionDuration.
+                player setAnimSpeedCoef 1 + (_btPlayerMovementSpeedMultiplier - 1) * (1 - _i / _btTransitionDuration);
+
+                // Strengthen the pp effect by percent _i / _btTransitionDuration
+                chromAb ppEffectAdjust 
+                [
+                    (1 - _i / _btTransitionDuration) * _btChromAbberationStrength, 
+                    (1 - _i / _btTransitionDuration) * _btChromAbberationStrength, 
+                    true
+                ];
+
+                sleep 0.2;
+            };
+
+            if ((missionNamespace getvariable ["bTimeActive",true]) && (missionNamespace getvariable ["bulletTime\tracerVision",true])) then 
+            {  
+                nul = call compile preprocessFileLineNumbers  "bulletTime\resetAmmo.sqf";  
+            };
+            missionNamespace setvariable ["bTimeActive",false];
+
+        sleep 0.33;
+            chromAb ppEffectEnable false;
+            ppEffectDestroy [chromAb];
+
+        sleep 0.5;
+            hint "bullet-time recovering!";
+}
